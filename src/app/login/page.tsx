@@ -1,27 +1,52 @@
 'use client';
 import Navbar from '../../components/Navbar';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    });
+    if (loginError) {
+      setError(loginError.message);
+      setLoading(false);
+      return;
+    }
+    if (data?.user) {
+      setSuccess(true);
+      setLoading(false);
+      router.push('/tournaments');
+      return;
+    }
+    setError('No se pudo autenticar.');
+    setLoading(false);
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-900 to-gray-900 text-white">
       <Navbar />
       <main className="max-w-md mx-auto mt-16 bg-gray-800 rounded p-8 shadow-lg">
         <h2 className="text-3xl font-bold mb-6">Iniciar Sesión</h2>
-        {submitted ? (
-          <div className="text-green-400 text-center font-semibold">¡Inicio de sesión simulado!</div>
+        {success ? (
+          <div className="text-green-400 text-center font-semibold">¡Inicio de sesión exitoso!</div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <input

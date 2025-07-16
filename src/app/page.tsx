@@ -2,7 +2,7 @@ import Navbar from '../components/Navbar';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-900 to-gray-900 text-white">
       <Navbar />
       <main className="max-w-2xl mx-auto mt-16 text-center">
         <h1 className="text-5xl font-extrabold mb-6">Bienvenido a GamerTorneos</h1>

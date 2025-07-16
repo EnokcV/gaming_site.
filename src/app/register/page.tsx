@@ -1,18 +1,39 @@
 'use client';
 import Navbar from '../../components/Navbar';
 import { useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    // Registro con Supabase Auth
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: { username: form.username },
+      },
+    });
+    const user = data?.user;
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      return;
+    }
+    setSuccess(true);
+    setLoading(false);
   };
 
   return (
@@ -20,8 +41,8 @@ export default function RegisterPage() {
       <Navbar />
       <main className="max-w-md mx-auto mt-16 bg-gray-800 rounded p-8 shadow-lg">
         <h2 className="text-3xl font-bold mb-6">Registro</h2>
-        {submitted ? (
-          <div className="text-green-400 text-center font-semibold">¡Registro simulado exitoso!</div>
+        {success ? (
+          <div className="text-green-400 text-center font-semibold">¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.</div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <input
@@ -31,7 +52,7 @@ export default function RegisterPage() {
               value={form.username}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 rounded bg-black-700 border border-whitey-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <input
               type="email"
@@ -40,7 +61,7 @@ export default function RegisterPage() {
               value={form.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 rounded bg-black-700 border border-white-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <input
               type="password"
@@ -49,14 +70,16 @@ export default function RegisterPage() {
               value={form.password}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 rounded bg-black-700 border border-white-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               type="submit"
               className="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded font-bold text-lg"
+              disabled={loading}
             >
-              Registrarse
+              {loading ? 'Registrando...' : 'Registrarse'}
             </button>
+            {error && <div className="text-red-400 text-center font-semibold mt-2">{error}</div>}
           </form>
         )}
       </main>

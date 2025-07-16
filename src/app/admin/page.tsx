@@ -1,6 +1,7 @@
 "use client";
 import Navbar from '../../components/Navbar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
 interface Tournament {
   id: number;
@@ -11,36 +12,65 @@ interface Tournament {
   published: boolean;
 }
 
-const initialTournaments: Tournament[] = [
-  { id: 1, name: 'Torneo Valorant', game: 'Valorant', date: '2025-08-01', description: 'Competencia abierta para todos los rangos.', published: true },
-  { id: 2, name: 'FIFA 25 Ultimate', game: 'FIFA 25', date: '2025-08-10', description: 'Torneo online 1v1.', published: false },
-];
-
 export default function AdminPage() {
-  const [tournaments, setTournaments] = useState<Tournament[]>(initialTournaments);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [form, setForm] = useState({ name: '', game: '', date: '', description: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTournaments();
+  }, []);
+
+  const fetchTournaments = async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error } = await supabase
+      .from('tournaments')
+      .select('*')
+      .order('date', { ascending: true });
+    if (error) {
+      setError('Error al cargar torneos.');
+      setTournaments([]);
+    } else {
+      setTournaments(data as Tournament[]);
+    }
+    setLoading(false);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.game || !form.date) return;
-    setTournaments([
-      ...tournaments,
-      { id: tournaments.length + 1, ...form, published: false },
+    setError(null);
+    const { error } = await supabase.from('tournaments').insert([
+      { name: form.name, game: form.game, date: form.date, description: form.description, published: false }
     ]);
+    if (error) setError('Error al crear el torneo.');
     setForm({ name: '', game: '', date: '', description: '' });
+    fetchTournaments();
   };
 
-  const togglePublish = (id: number) => {
-    setTournaments(tournaments.map(t => t.id === id ? { ...t, published: !t.published } : t));
+  const togglePublish = async (id: number) => {
+    const torneo = tournaments.find(t => t.id === id);
+    if (!torneo) return;
+    const { error } = await supabase
+      .from('tournaments')
+      .update({ published: !torneo.published })
+      .eq('id', id);
+    if (error) setError('Error al actualizar el estado de publicación.');
+    fetchTournaments();
   };
 
-  const handleDelete = (id: number) => {
-    setTournaments(tournaments.filter(t => t.id !== id));
+  const handleDelete = async (id: number) => {
+    const { error } = await supabase.from('tournaments').delete().eq('id', id);
+    if (error) setError('Error al eliminar el torneo.');
+    fetchTournaments();
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900 text-white">
