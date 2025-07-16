@@ -5,7 +5,13 @@ import { supabase } from '../../lib/supabaseClient';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<{ username: string; email: string } | null>(null);
-  const [tournaments, setTournaments] = useState<any[]>([]);
+  interface Tournament {
+  id: number;
+  name: string;
+  game: string;
+  date: string;
+}
+const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +42,7 @@ export default function ProfilePage() {
       }
       // Extraer info de los torneos
       const joinedTournaments = (joined || [])
-        .map((row: any) => row.tournaments)
+        .flatMap((row: { tournaments: Tournament[] }) => row.tournaments || [])
         .filter(Boolean);
       setTournaments(joinedTournaments);
       setLoading(false);

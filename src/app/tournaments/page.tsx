@@ -16,6 +16,7 @@ export default function TournamentsPage() {
   const [joined, setJoined] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [userId, setUserId] = useState<string | null>(null);
 
   // Obtener usuario actual al montar
@@ -41,7 +42,7 @@ export default function TournamentsPage() {
       .select('tournament_id')
       .eq('user_id', userId)
       .then(({ data }) => {
-        if (data) setJoined(data.map((row: any) => row.tournament_id));
+        if (data) setJoined(data.map((row: { tournament_id: number }) => row.tournament_id));
       });
   }, [userId]);
 

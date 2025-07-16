@@ -26,7 +26,7 @@ export default function RegisterPage() {
         data: { username: form.username },
       },
     });
-    const user = data?.user;
+  
     if (signUpError) {
       setError(signUpError.message);
       setLoading(false);

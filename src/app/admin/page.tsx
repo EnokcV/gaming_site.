@@ -15,8 +15,7 @@ interface Tournament {
 export default function AdminPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [form, setForm] = useState({ name: '', game: '', date: '', description: '' });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchTournaments();
